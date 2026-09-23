@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.command' | { read -r cmd; echo \"$(date '+%H:%M:%S') $cmd\" >> /tmp/redrive-bash-log.txt; }",
+            "command": ".claude/hooks/pre-tool-bash-logger.sh",
             "statusMessage": "Logging command..."
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path' | { read -r f; case \"$f\" in *.ts) pnpm exec oxlint \"$f\" 2>/dev/null || true;; esac; }",
+            "command": ".claude/hooks/post-tool-lint.sh",
             "statusMessage": "Linting..."
           }
         ]
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"systemMessage\": \"Done. If you added or changed entities, remember: pnpm migration:generate then pnpm migration:run\"}'",
+            "command": ".claude/hooks/stop-reminder.sh",
             "statusMessage": "Wrapping up..."
           }
         ]
