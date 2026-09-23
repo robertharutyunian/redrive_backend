@@ -7,19 +7,31 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import type { Relation } from 'typeorm';
-import { Tire } from '../tires/tire.entity.js';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { Tire } from '../../tires/entities/tire.entity.js';
+import {
+  BRAND_COUNTRY_MAX_LENGTH,
+  BRAND_NAME_MAX_LENGTH,
+} from '../constants/brand.constants.js';
 
 @Entity('brands')
 export class Brand {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @IsString()
+  @MaxLength(BRAND_NAME_MAX_LENGTH)
   @Column()
   name: string;
 
+  @IsOptional()
+  @IsString()
   @Column({ name: 'logo_url', type: 'varchar', nullable: true })
   logoUrl: string | null;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(BRAND_COUNTRY_MAX_LENGTH)
   @Column({ type: 'varchar', nullable: true })
   country: string | null;
 

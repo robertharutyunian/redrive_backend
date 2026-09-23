@@ -1,0 +1,3 @@
+export const INVENTORY_PRICE_PRECISION = 10;
+export const INVENTORY_PRICE_SCALE = 2;
+export const INVENTORY_QUANTITY_MIN = 0;

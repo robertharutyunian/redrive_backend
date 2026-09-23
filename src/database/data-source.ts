@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
-import { Brand } from '../brands/brand.entity.js';
-import { Tire } from '../tires/tire.entity.js';
-import { Inventory } from '../inventory/inventory.entity.js';
+import { Brand } from '../brands/entities/brand.entity.js';
+import { Tire } from '../tires/entities/tire.entity.js';
+import { Inventory } from '../inventory/entities/inventory.entity.js';
 
 export default new DataSource({
   type: 'postgres',

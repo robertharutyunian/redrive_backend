@@ -1,0 +1,39 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command' | { read -r cmd; echo \"$(date '+%H:%M:%S') $cmd\" >> /tmp/redrive-bash-log.txt; }",
+            "statusMessage": "Logging command..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path' | { read -r f; case \"$f\" in *.ts) pnpm exec oxlint \"$f\" 2>/dev/null || true;; esac; }",
+            "statusMessage": "Linting..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\": \"Done. If you added or changed entities, remember: pnpm migration:generate then pnpm migration:run\"}'",
+            "statusMessage": "Wrapping up..."
+          }
+        ]
+      }
+    ]
+  }
+}

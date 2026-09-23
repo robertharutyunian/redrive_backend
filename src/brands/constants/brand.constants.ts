@@ -1,0 +1,2 @@
+export const BRAND_NAME_MAX_LENGTH = 100;
+export const BRAND_COUNTRY_MAX_LENGTH = 100;

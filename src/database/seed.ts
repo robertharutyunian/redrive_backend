@@ -1,7 +1,8 @@
 import AppDataSource from './data-source.js';
-import { Brand } from '../brands/brand.entity.js';
-import { Tire, TireSeason } from '../tires/tire.entity.js';
-import { Inventory } from '../inventory/inventory.entity.js';
+import { Brand } from '../brands/entities/brand.entity.js';
+import { Tire } from '../tires/entities/tire.entity.js';
+import { TireSeason } from '../tires/enums/tire-season.enum.js';
+import { Inventory } from '../inventory/entities/inventory.entity.js';
 
 const brandsData = [
   { name: 'Firemax', country: 'China' },
