@@ -1,0 +1,6 @@
+export const USER_FNAME_MAX_LENGTH = 100;
+export const USER_LNAME_MAX_LENGTH = 100;
+export const USER_PHONE_MAX_LENGTH = 20;
+export const USER_EMAIL_MAX_LENGTH = 255;
+export const USER_USERNAME_MAX_LENGTH = 50;
+export const USER_PASSWORD_MAX_LENGTH = 255;

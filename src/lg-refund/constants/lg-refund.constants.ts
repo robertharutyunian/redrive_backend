@@ -1,0 +1,1 @@
+export const LG_REFUND_MESSAGE_MAX_LENGTH = 500;

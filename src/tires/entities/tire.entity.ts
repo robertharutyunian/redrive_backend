@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToOne,
@@ -28,10 +29,12 @@ import {
 } from '../constants/tire.constants.js';
 
 @Entity('tires')
+@Index(['width', 'profile', 'radius'])
 export class Tire {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @ManyToOne(() => Brand, (brand) => brand.tires)
   @JoinColumn({ name: 'brand_id' })
   brand: Relation<Brand>;

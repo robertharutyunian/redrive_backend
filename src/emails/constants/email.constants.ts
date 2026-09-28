@@ -1,0 +1,1 @@
+export const EMAIL_INVOICE_URL_MAX_LENGTH = 255;
