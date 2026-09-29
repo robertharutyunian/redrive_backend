@@ -1,6 +1,9 @@
-export const USER_FNAME_MAX_LENGTH = 100;
-export const USER_LNAME_MAX_LENGTH = 100;
+export const USER_FNAME_MAX_LENGTH = 50;
+export const USER_LNAME_MAX_LENGTH = 50;
 export const USER_PHONE_MAX_LENGTH = 20;
-export const USER_EMAIL_MAX_LENGTH = 255;
+export const USER_PHONE_PATTERN = /^(\+374|0)\d{8}$/;
+export const USER_PHONE_PATTERN_MESSAGE = 'Phone number must be a valid Armenian number';
+export const USER_EMAIL_MAX_LENGTH = 100;
 export const USER_USERNAME_MAX_LENGTH = 50;
-export const USER_PASSWORD_MAX_LENGTH = 255;
+export const USER_PASSWORD_MAX_LENGTH = 100;
+export const USER_PASSWORD_RESET_TOKEN_HASH_LENGTH = 64;
