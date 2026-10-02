@@ -2,6 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Order } from '../entities/order.entity.js';
 import { DeliveryMethod } from '../enums/delivery-method.enum.js';
 import { OrderStatus } from '../enums/order-status.enum.js';
+import {
+  OrderItemResponseDto,
+  toOrderItemResponse,
+} from '../../order-items/dto/order-item-response.dto.js';
 
 export class OrderUserSummaryDto {
   @ApiProperty() id: number;
@@ -22,6 +26,8 @@ export class OrderResponseDto {
   @ApiProperty({ nullable: true }) deliveryInstructions: string | null;
   @ApiProperty({ enum: OrderStatus }) status: OrderStatus;
   @ApiProperty() totalPrice: number;
+  @ApiProperty({ type: () => OrderItemResponseDto, isArray: true })
+  items: OrderItemResponseDto[];
   @ApiProperty() createdAt: Date;
 }
 
@@ -44,6 +50,7 @@ export function toOrderResponse(order: Order): OrderResponseDto {
     deliveryInstructions: order.deliveryInstructions,
     status: order.status,
     totalPrice: Number(order.totalPrice),
+    items: order.orderItems.map(toOrderItemResponse),
     createdAt: order.createdAt,
   };
 }

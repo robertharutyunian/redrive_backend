@@ -1,8 +1,23 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ApiOkResponsePaginated } from '../common/decorators/api-paginated-response.decorator.js';
+import {
+  Body,
+  Controller,
+  Param,
+  ParseIntPipe,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiConflictResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { UsersService } from './users.service.js';
-import { UserQueryDto } from './dto/user-query.dto.js';
+import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UserResponseDto } from './dto/user-response.dto.js';
 
 @ApiTags('Users')
@@ -10,18 +25,18 @@ import { UserResponseDto } from './dto/user-response.dto.js';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get()
-  @ApiOperation({ summary: 'List users' })
-  @ApiOkResponsePaginated(UserResponseDto)
-  findAll(@Query() query: UserQueryDto) {
-    return this.usersService.findAll(query);
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a user by id' })
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Update the current user's own profile" })
   @ApiOkResponse({ type: UserResponseDto })
-  @ApiNotFoundResponse({ description: 'User not found' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.findOne(id);
+  @ApiUnauthorizedResponse({ description: 'Missing, invalid or expired token' })
+  @ApiNotFoundResponse({ description: 'User not found, or not the current user' })
+  @ApiConflictResponse({ description: 'An account with that email already exists' })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateUserDto,
+    @CurrentUser() user: { sub: number },
+  ) {
+    return this.usersService.update(id, user.sub, dto);
   }
 }

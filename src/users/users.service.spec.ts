@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,13 +8,13 @@ import { UsersService } from './users.service.js';
 describe('UsersService', () => {
   let service: UsersService;
   const repository = {
-    findAndCount: vi.fn(),
     findOne: vi.fn(),
+    save: vi.fn(),
   };
 
   beforeEach(async () => {
-    repository.findAndCount.mockReset();
     repository.findOne.mockReset();
+    repository.save.mockReset();
 
     const module = await Test.createTestingModule({
       providers: [
@@ -37,37 +37,33 @@ describe('UsersService', () => {
     createdAt: new Date('2026-01-01'),
   } as User;
 
-  it('paginates and maps results, computing totalPages', async () => {
-    repository.findAndCount.mockResolvedValue([[user], 42]);
-
-    const result = await service.findAll({ page: 2, limit: 10 });
-
-    expect(repository.findAndCount).toHaveBeenCalledWith(
-      expect.objectContaining({ skip: 10, take: 10 }),
+  it('throws NotFoundException when updating a user that is not the current user', async () => {
+    await expect(service.update(1, 2, { fname: 'New' })).rejects.toBeInstanceOf(
+      NotFoundException,
     );
-    expect(result.meta).toEqual({ total: 42, page: 2, limit: 10, totalPages: 5 });
+    expect(repository.findOne).not.toHaveBeenCalled();
   });
 
-  it('never includes password in the mapped response', async () => {
-    repository.findAndCount.mockResolvedValue([[user], 1]);
+  it('updates and maps the current user', async () => {
+    repository.findOne.mockResolvedValue(user);
+    repository.save.mockResolvedValue(Object.assign({}, user, { fname: 'New' }));
 
-    const result = await service.findAll({ page: 1, limit: 20 });
+    const result = await service.update(1, 1, { fname: 'New' });
 
-    expect(JSON.stringify(result)).not.toContain('hashed-secret');
-    expect(result.data[0]).toEqual({
-      id: 1,
-      fname: 'Jane',
-      lname: 'Doe',
-      phone: '+37400000000',
-      email: 'jane@example.com',
-      username: 'janedoe',
-      createdAt: user.createdAt,
-    });
+    expect(repository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ fname: 'New' }),
+    );
+    expect(result.fname).toBe('New');
   });
 
-  it('throws NotFoundException when the user does not exist', async () => {
-    repository.findOne.mockResolvedValue(null);
+  it('throws ConflictException when changing to an email already in use', async () => {
+    repository.findOne
+      .mockResolvedValueOnce(user)
+      .mockResolvedValueOnce(Object.assign({}, user, { id: 2, email: 'taken@example.com' }));
 
-    await expect(service.findOne(999)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.update(1, 1, { email: 'taken@example.com' }),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(repository.save).not.toHaveBeenCalled();
   });
 });

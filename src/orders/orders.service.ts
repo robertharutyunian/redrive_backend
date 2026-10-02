@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import type { EntityManager } from 'typeorm';
 import { paginate } from '../common/dto/paginated-response.dto.js';
 import type { PaginatedResponseDto } from '../common/dto/paginated-response.dto.js';
@@ -46,7 +46,8 @@ export class OrdersService {
       .skip((page - 1) * limit)
       .take(limit);
 
-    const [orders, total] = await qb.getManyAndCount();
+    const [page1, total] = await qb.getManyAndCount();
+    const orders = await this.loadWithItems(page1.map((order) => order.id));
 
     return paginate(orders.map(toOrderResponse), total, page, limit);
   }
@@ -54,7 +55,7 @@ export class OrdersService {
   async findOne(id: number, currentUserId: number): Promise<OrderResponseDto> {
     const order = await this.ordersRepository.findOne({
       where: { id },
-      relations: { user: true },
+      relations: { user: true, orderItems: { tire: { brand: true, inventory: true } } },
     });
 
     if (!order || order.user?.id !== currentUserId) {
@@ -62,6 +63,21 @@ export class OrdersService {
     }
 
     return toOrderResponse(order);
+  }
+
+  // Loading orderItems via the paginated query builder above would break pagination
+  // (a one-to-many join multiplies rows before skip/take applies), so the item tree is
+  // loaded in a second query, keyed by id, and reordered to match the paginated page.
+  private async loadWithItems(ids: number[]): Promise<Order[]> {
+    if (ids.length === 0) return [];
+
+    const orders = await this.ordersRepository.find({
+      where: { id: In(ids) },
+      relations: { user: true, orderItems: { tire: { brand: true, inventory: true } } },
+    });
+
+    const byId = new Map(orders.map((order) => [order.id, order]));
+    return ids.map((id) => byId.get(id)!);
   }
 
   async create(dto: CreateOrderDto, userId?: number): Promise<OrderResponseDto> {

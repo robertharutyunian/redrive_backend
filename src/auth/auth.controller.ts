@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
@@ -17,6 +17,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { AuthResponseDto, MessageResponseDto } from './dto/auth-response.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
+import { UserResponseDto } from '../users/dto/user-response.dto.js';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -37,6 +38,15 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Invalid email or password' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Get the signed-in user's own profile" })
+  @ApiOkResponse({ type: UserResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Missing, invalid or expired token' })
+  me(@CurrentUser() user: { sub: number }) {
+    return this.authService.me(user.sub);
   }
 
   @Post('change-password')

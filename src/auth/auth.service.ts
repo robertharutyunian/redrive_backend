@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../users/entities/user.entity.js';
 import { toUserResponse } from '../users/dto/user-response.dto.js';
+import type { UserResponseDto } from '../users/dto/user-response.dto.js';
 import { USER_USERNAME_MAX_LENGTH } from '../users/constants/users.constants.js';
 import { Email } from '../emails/entities/email.entity.js';
 import { EmailType } from '../emails/enums/email-type.enum.js';
@@ -72,6 +73,15 @@ export class AuthService {
     }
 
     return this.buildAuthResponse(user);
+  }
+
+  async me(userId: number): Promise<UserResponseDto> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('Invalid session');
+    }
+
+    return toUserResponse(user);
   }
 
   async changePassword(

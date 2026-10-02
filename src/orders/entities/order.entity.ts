@@ -5,6 +5,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -21,6 +22,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { User } from '../../users/entities/user.entity.js';
+import { OrderItem } from '../../order-items/entities/order-item.entity.js';
 import {
   USER_EMAIL_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
@@ -45,6 +47,9 @@ export class Order {
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'user_id' })
   user: Relation<User> | null;
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
+  orderItems: Relation<OrderItem[]>;
 
   // Contact details are snapshotted per order: copied from the user's profile for
   // logged-in checkout, taken from the form for guest checkout. Never read live from

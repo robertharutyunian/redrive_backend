@@ -1,14 +1,13 @@
 # ReDrive Database Schema
 
-Status as of 2026-09-26: `brands`, `tires`, and `inventory` are implemented and migrated (see
-`src/brands/entities/brand.entity.ts`, `src/tires/entities/tire.entity.ts`,
-`src/inventory/entities/inventory.entity.ts`, and the migrations under `src/database/migrations/`).
+Status as of 2026-10-02: all tables below (`brands`, `tires`, `inventory`, `users`, `orders`,
+`order_items`, `emails`, `payment`, `lg_payment`, `refund`, `lg_refund`) are implemented and migrated
+(see the migrations under `src/database/migrations/`, through `v7-AllowNullableDeliveryAddress`).
+The old "entities built, migration pending" split no longer applies — everything here exists in the
+database.
 
-`users`, `orders`, `order_items`, `emails`, `payment`, `lg_payment`, `refund`, and `lg_refund` all have
-entity files, enums, and constants built (`src/users/`, `src/orders/`, `src/order-items/`,
-`src/emails/`, `src/payment/`, `src/lg-payment/`, `src/refund/`, `src/lg-refund/`) and are registered
-in `database.module.ts` / `data-source.ts`, but **no migration has been generated or run for them
-yet** — none of these tables exist in the database.
+See [Scope decisions](#scope-decisions-2026-10-02) at the bottom for what's explicitly **not** being
+built right now, agreed after reviewing the frontend UI mockups against this schema.
 
 Indexing is called out per-table below and summarized in [Indexes](#indexes). Postgres auto-indexes
 primary keys and `unique` columns (including `OneToOne` join columns, which TypeORM makes `unique`
@@ -61,7 +60,7 @@ catalog table.
 | created_at | timestamp | |
 | updated_at | timestamp | |
 
-## Entities built, migration pending
+## Also implemented
 
 ### users
 | column | type | notes |
@@ -69,24 +68,31 @@ catalog table.
 | id | serial | PK |
 | fname | varchar | |
 | lname | varchar | |
-| phone | varchar | nullable |
+| phone | varchar | **required** (made non-nullable by `v5-MakeUserPhoneRequired`) |
 | email | varchar | unique — auto-indexed |
 | username | varchar | unique — auto-indexed |
 | password | varchar | bcrypt hash |
+| password_reset_token_hash | varchar | nullable — sha256 hash of the active reset token, set by `forgotPassword`, cleared by `resetPassword` |
+| password_reset_token_expires_at | timestamptz | nullable — 1h expiry on the reset token |
 | created_at | timestamp | |
 | updated_at | timestamp | |
 
 ### orders
 `payment_method` and `payment_status` are **not** columns here — that state now lives on `payment`
-rows (see [Decisions](#decisions-made-along-the-way)).
+rows (see [Decisions](#decisions-made-along-the-way)). Guest checkout is supported: contact fields
+are always populated (copied from the user profile when logged in, taken from the request body when
+not) so an order always records who to contact as of purchase time, independent of the `users` table.
 | column | type | notes |
 |---|---|---|
 | id | serial | PK |
-| user_id | int | FK -> users.id — indexed (order history per user) |
-| delivery_method | enum | e.g. pickup / courier |
-| delivery_address | varchar | |
+| user_id | int | FK -> users.id, **nullable** — null for guest orders. Indexed (order history per user) |
+| contact_name | varchar | snapshot, never read live from `users` |
+| contact_email | varchar | snapshot |
+| contact_phone | varchar | snapshot |
+| delivery_method | enum | pickup / courier (see [Scope decisions](#scope-decisions-2026-10-02) — this is the full set for now, no "installation" option) |
+| delivery_address | varchar | **nullable** (`v7-AllowNullableDeliveryAddress`) — required at the DTO level only when `delivery_method = courier`; forced `null` for `pickup` |
 | delivery_instructions | varchar | nullable |
-| status | enum | pending / processing / shipped / delivered / cancelled — indexed (admin views filtering by status) |
+| status | enum | pending / processing / delivered / cancelled — indexed (admin views filtering by status). **No `shipped` value** — an earlier draft of this doc listed one, it was never implemented |
 | total_price | numeric(10,2) | stored snapshot, not recomputed from order_items |
 | created_at | timestamp | |
 | updated_at | timestamp | |
@@ -107,7 +113,8 @@ rows (see [Decisions](#decisions-made-along-the-way)).
 | column | type | notes |
 |---|---|---|
 | id | serial | PK |
-| user_id | int | FK -> users.id — indexed |
+| user_id | int | FK -> users.id, **nullable** (null for guest-order emails) — indexed. Attribution only ("which account, if any") — not the send destination |
+| recipient_email | varchar | the actual send-to address, always set (added by `v6-AddGuestCheckoutSupport`) — works for both account holders and guests |
 | order_id | int | FK -> orders.id, **nullable** (not all emails relate to an order) — indexed |
 | type | enum | order_confirmation / invoice / password_reset / shipping_update |
 | sent_at | timestamp | nullable — set when the email actually goes out, may lag `created_at` |
@@ -190,9 +197,8 @@ Postgres auto-indexes PKs and `unique` columns (incl. `OneToOne` join columns). 
 needs an explicit `@Index()` on the entity — TypeORM does not add these automatically for plain
 `ManyToOne` FKs.
 
-Status column reflects the entity code, not the database — none of these exist in the database until
-a migration for `users`/`orders`/`order_items`/`emails`/`payment`/`lg_payment`/`refund`/`lg_refund` is
-generated and run.
+All of these are now applied in the database (see migrations through `v7`), not just present in
+entity code.
 
 | table.column | kind | why | status |
 |---|---|---|---|
@@ -239,3 +245,24 @@ Explicitly **not** indexed (evaluated and skipped, not overlooked):
 - `refund` is its own table, not folded into `payment` — a refund is a distinct financial event
   against an already-succeeded payment, with its own status lifecycle.
 - `raw_payload` on the log tables is `jsonb` — assumes Postgres stays the DB; revisit if that changes.
+
+## Scope decisions (2026-10-02)
+
+The frontend UI mockups (Stitch exports, `stitch_local_tire_shop_e_commerce/`) imply several features
+with no table here. Reviewed against this schema and explicitly deferred — **do not add
+entities/columns for these unless the user revisits them**:
+
+- **No installation/service-bay booking.** The mockups repeatedly imply an appointment/bay/time-slot
+  concept ("bay reservation", "bay scheduling"). Not building it. `orders.delivery_method` stays a
+  two-value enum.
+- **Fulfillment is pickup or delivery only, nothing else.** No "certified installation" fulfillment
+  option — `DeliveryMethod` (`pickup` / `courier`) is the complete set for now.
+- **No reviews/ratings.** Star ratings and review counts shown in the mobile mockups have no backing
+  entity and none is planned.
+- **No promo codes / rebates / discounts.** No entity for promo/discount codes.
+- **Nothing vehicle-related.** No vehicle profile, year/make/model or VIN/plate fitment lookup.
+- **Smaller-confidence UI items are frontend-only for now** (not backend scope): back-in-stock
+  "Request Stock" alerts, store/location selection ("Change Shop"/"Change Bay"), Affirm/BNPL
+  financing as a payment method, returns/RMA workflow beyond the existing `refund` table.
+
+These were product calls, not technical constraints — revisit if priorities change.
