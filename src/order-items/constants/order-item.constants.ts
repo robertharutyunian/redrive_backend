@@ -1,3 +1,1 @@
-export const ORDER_ITEM_PRICE_PRECISION = 10;
-export const ORDER_ITEM_PRICE_SCALE = 2;
 export const ORDER_ITEM_QUANTITY_MIN = 1;

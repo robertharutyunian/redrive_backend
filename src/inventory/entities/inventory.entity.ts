@@ -11,11 +11,8 @@ import type { Relation } from 'typeorm';
 import { Transform } from 'class-transformer';
 import { IsInt, IsNumberString, Min } from 'class-validator';
 import { Tire } from '../../tires/entities/tire.entity.js';
-import {
-  INVENTORY_PRICE_PRECISION,
-  INVENTORY_PRICE_SCALE,
-  INVENTORY_QUANTITY_MIN,
-} from '../constants/inventory.constants.js';
+import { INVENTORY_QUANTITY_MIN } from '../constants/inventory.constants.js';
+import { MONEY_PRECISION, MONEY_SCALE } from '../../common/constants/money.constants.js';
 
 @Entity('inventory')
 export class Inventory {
@@ -33,12 +30,12 @@ export class Inventory {
 
   @IsNumberString()
   @Transform(({ value }) => parseFloat(value))
-  @Column({ name: 'origin_price', type: 'numeric', precision: INVENTORY_PRICE_PRECISION, scale: INVENTORY_PRICE_SCALE })
+  @Column({ name: 'origin_price', type: 'numeric', precision: MONEY_PRECISION, scale: MONEY_SCALE })
   originPrice: string;
 
   @IsNumberString()
   @Transform(({ value }) => parseFloat(value))
-  @Column({ name: 'unit_price', type: 'numeric', precision: INVENTORY_PRICE_PRECISION, scale: INVENTORY_PRICE_SCALE })
+  @Column({ name: 'unit_price', type: 'numeric', precision: MONEY_PRECISION, scale: MONEY_SCALE })
   unitPrice: string;
 
   @CreateDateColumn({ name: 'created_at' })

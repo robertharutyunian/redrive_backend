@@ -21,11 +21,10 @@ import { Order } from '../../orders/entities/order.entity.js';
 import { PaymentMethod } from '../enums/payment-method.enum.js';
 import { PaymentStatus } from '../enums/payment-status.enum.js';
 import {
-  PAYMENT_AMOUNT_PRECISION,
-  PAYMENT_AMOUNT_SCALE,
   PAYMENT_GATEWAY_MAX_LENGTH,
   PAYMENT_GATEWAY_REFERENCE_MAX_LENGTH,
 } from '../constants/payment.constants.js';
+import { MONEY_PRECISION, MONEY_SCALE } from '../../common/constants/money.constants.js';
 
 @Entity('payment')
 export class Payment {
@@ -41,8 +40,8 @@ export class Payment {
   @Transform(({ value }) => parseFloat(value))
   @Column({
     type: 'numeric',
-    precision: PAYMENT_AMOUNT_PRECISION,
-    scale: PAYMENT_AMOUNT_SCALE,
+    precision: MONEY_PRECISION,
+    scale: MONEY_SCALE,
   })
   amount: string;
 

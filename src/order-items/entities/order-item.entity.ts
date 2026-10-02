@@ -13,11 +13,8 @@ import { Transform } from 'class-transformer';
 import { IsInt, IsNumberString, Min } from 'class-validator';
 import { Order } from '../../orders/entities/order.entity.js';
 import { Tire } from '../../tires/entities/tire.entity.js';
-import {
-  ORDER_ITEM_PRICE_PRECISION,
-  ORDER_ITEM_PRICE_SCALE,
-  ORDER_ITEM_QUANTITY_MIN,
-} from '../constants/order-item.constants.js';
+import { ORDER_ITEM_QUANTITY_MIN } from '../constants/order-item.constants.js';
+import { MONEY_PRECISION, MONEY_SCALE } from '../../common/constants/money.constants.js';
 
 @Entity('order_items')
 export class OrderItem {
@@ -44,8 +41,8 @@ export class OrderItem {
   @Column({
     name: 'unit_price',
     type: 'numeric',
-    precision: ORDER_ITEM_PRICE_PRECISION,
-    scale: ORDER_ITEM_PRICE_SCALE,
+    precision: MONEY_PRECISION,
+    scale: MONEY_SCALE,
   })
   unitPrice: string;
 
@@ -54,8 +51,8 @@ export class OrderItem {
   @Column({
     name: 'total_price',
     type: 'numeric',
-    precision: ORDER_ITEM_PRICE_PRECISION,
-    scale: ORDER_ITEM_PRICE_SCALE,
+    precision: MONEY_PRECISION,
+    scale: MONEY_SCALE,
   })
   totalPrice: string;
 

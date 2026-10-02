@@ -14,8 +14,11 @@ export class OrderResponseDto {
   @ApiProperty() id: number;
   @ApiProperty({ type: () => OrderUserSummaryDto, nullable: true })
   user: OrderUserSummaryDto | null;
+  @ApiProperty() contactName: string;
+  @ApiProperty() contactEmail: string;
+  @ApiProperty() contactPhone: string;
   @ApiProperty({ enum: DeliveryMethod }) deliveryMethod: DeliveryMethod;
-  @ApiProperty() deliveryAddress: string;
+  @ApiProperty({ nullable: true }) deliveryAddress: string | null;
   @ApiProperty({ nullable: true }) deliveryInstructions: string | null;
   @ApiProperty({ enum: OrderStatus }) status: OrderStatus;
   @ApiProperty() totalPrice: number;
@@ -33,6 +36,9 @@ export function toOrderResponse(order: Order): OrderResponseDto {
           email: order.user.email,
         }
       : null,
+    contactName: order.contactName,
+    contactEmail: order.contactEmail,
+    contactPhone: order.contactPhone,
     deliveryMethod: order.deliveryMethod,
     deliveryAddress: order.deliveryAddress,
     deliveryInstructions: order.deliveryInstructions,

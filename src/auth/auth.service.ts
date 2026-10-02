@@ -111,6 +111,7 @@ export class AuthService {
         this.emailsRepository.create({
           user,
           order: null,
+          recipientEmail: user.email,
           type: EmailType.PASSWORD_RESET,
           sentAt: new Date(),
         }),

@@ -14,11 +14,10 @@ import { IsEnum, IsNumberString, IsOptional, IsString, MaxLength } from 'class-v
 import { Payment } from '../../payment/entities/payment.entity.js';
 import { RefundStatus } from '../enums/refund-status.enum.js';
 import {
-  REFUND_AMOUNT_PRECISION,
-  REFUND_AMOUNT_SCALE,
   REFUND_GATEWAY_REFERENCE_MAX_LENGTH,
   REFUND_REASON_MAX_LENGTH,
 } from '../constants/refund.constants.js';
+import { MONEY_PRECISION, MONEY_SCALE } from '../../common/constants/money.constants.js';
 
 @Entity('refund')
 export class Refund {
@@ -34,8 +33,8 @@ export class Refund {
   @Transform(({ value }) => parseFloat(value))
   @Column({
     type: 'numeric',
-    precision: REFUND_AMOUNT_PRECISION,
-    scale: REFUND_AMOUNT_SCALE,
+    precision: MONEY_PRECISION,
+    scale: MONEY_SCALE,
   })
   amount: string;
 

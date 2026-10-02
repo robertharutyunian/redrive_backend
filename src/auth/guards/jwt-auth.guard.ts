@@ -7,7 +7,11 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 
-export interface AuthenticatedRequest extends Request {
+export interface RequestWithOptionalUser extends Request {
+  user?: { sub: number; email: string };
+}
+
+export interface AuthenticatedRequest extends RequestWithOptionalUser {
   user: { sub: number; email: string };
 }
 

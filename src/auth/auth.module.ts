@@ -8,6 +8,7 @@ import { Email } from '../emails/entities/email.entity.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard.js';
 import { AUTH_JWT_DEFAULT_EXPIRES_IN } from './constants/auth.constants.js';
 
 @Module({
@@ -26,7 +27,7 @@ import { AUTH_JWT_DEFAULT_EXPIRES_IN } from './constants/auth.constants.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAuthGuard],
-  exports: [JwtAuthGuard],
+  providers: [AuthService, JwtAuthGuard, OptionalJwtAuthGuard],
+  exports: [JwtModule, JwtAuthGuard, OptionalJwtAuthGuard],
 })
 export class AuthModule {}

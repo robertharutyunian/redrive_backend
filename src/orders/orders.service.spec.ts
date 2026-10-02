@@ -42,6 +42,9 @@ describe('OrdersService', () => {
   const order = {
     id: 1,
     user: { id: 5, fname: 'Jane', lname: 'Doe', email: 'jane@example.com' },
+    contactName: 'Jane Doe',
+    contactEmail: 'jane@example.com',
+    contactPhone: '+37491234567',
     deliveryMethod: DeliveryMethod.COURIER,
     deliveryAddress: '123 Main St',
     deliveryInstructions: null,
@@ -53,26 +56,28 @@ describe('OrdersService', () => {
   it('applies only the filters that were provided and paginates', async () => {
     queryBuilder.getManyAndCount.mockResolvedValue([[order], 1]);
 
-    const result = await service.findAll({
-      page: 1,
-      limit: 20,
-      status: OrderStatus.PENDING,
-    });
+    const result = await service.findAll(
+      {
+        page: 1,
+        limit: 20,
+        status: OrderStatus.PENDING,
+      },
+      5,
+    );
 
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith('user.id = :currentUserId', {
+      currentUserId: 5,
+    });
     expect(queryBuilder.andWhere).toHaveBeenCalledWith('order.status = :status', {
       status: OrderStatus.PENDING,
     });
-    expect(queryBuilder.andWhere).not.toHaveBeenCalledWith(
-      expect.stringContaining('user.id'),
-      expect.anything(),
-    );
     expect(result.meta).toEqual({ total: 1, page: 1, limit: 20, totalPages: 1 });
   });
 
   it('maps totalPrice to a number and nests the user summary', async () => {
     queryBuilder.getManyAndCount.mockResolvedValue([[order], 1]);
 
-    const result = await service.findAll({ page: 1, limit: 20 });
+    const result = await service.findAll({ page: 1, limit: 20 }, 5);
 
     expect(result.data[0].totalPrice).toBe(150);
     expect(result.data[0].user).toEqual({
@@ -86,6 +91,6 @@ describe('OrdersService', () => {
   it('throws NotFoundException when the order does not exist', async () => {
     repository.findOne.mockResolvedValue(null);
 
-    await expect(service.findOne(999)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.findOne(999, 5)).rejects.toBeInstanceOf(NotFoundException);
   });
 });
